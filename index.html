@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HACK THE PLANET</title>
+<meta name="description" content="Cola interativa de SQL injection / bug bounty — tema Hackers (1995), pra revisar no celular.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#060a06; --bg2:#0b120b; --panel:#0e170e;
+  --green:#00ff41; --green-dim:#00b32c; --green-deep:#064012;
+  --cyan:#00f0ff; --magenta:#ff2e97; --amber:#ffcc33;
+  --text:#b6ffc0; --muted:#4f8a5a;
+  --line:rgba(0,255,65,.18);
+  --glow:0 0 4px rgba(0,255,65,.55), 0 0 12px rgba(0,255,65,.25);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Share Tech Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:16px; line-height:1.55;
+  min-height:100vh;
+  overflow-x:hidden;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  background-image:radial-gradient(ellipse at 50% -10%, rgba(0,255,65,.06), transparent 60%);
+}
+/* CRT scanlines + flicker */
+body::before{
+  content:""; position:fixed; inset:0; z-index:9998; pointer-events:none;
+  background:repeating-linear-gradient(0deg, rgba(0,0,0,0) 0, rgba(0,0,0,0) 2px, rgba(0,0,0,.22) 3px, rgba(0,0,0,0) 4px);
+  mix-blend-mode:multiply;
+}
+body::after{
+  content:""; position:fixed; inset:0; z-index:9997; pointer-events:none;
+  background:radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.55) 100%);
+}
+@keyframes flicker{0%,100%{opacity:1}92%{opacity:1}93%{opacity:.82}94%{opacity:1}97%{opacity:.9}98%{opacity:1}}
+.wrap{max-width:760px;margin:0 auto;padding:18px 16px 90px;position:relative;z-index:1;animation:flicker 7s infinite}
+
+/* Boot */
+#boot{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px;cursor:pointer}
+#boot .term{width:100%;max-width:620px;color:var(--green);text-shadow:var(--glow);font-size:15px;white-space:pre-wrap}
+#boot .cursor{display:inline-block;width:10px;background:var(--green);animation:blink 1s steps(1) infinite;box-shadow:var(--glow)}
+@keyframes blink{50%{opacity:0}}
+#boot .skip{position:fixed;bottom:22px;left:0;right:0;text-align:center;color:var(--muted);font-size:13px}
+.hidden{display:none!important}
+
+/* Header */
+header{text-align:center;margin:6px 0 20px}
+.logo{font-family:'VT323',monospace;font-size:clamp(44px,13vw,84px);line-height:.9;color:var(--green);text-shadow:0 0 6px rgba(0,255,65,.7),0 0 22px rgba(0,255,65,.35);letter-spacing:1px;margin:0}
+.logo .pl{color:var(--magenta);text-shadow:0 0 6px rgba(255,46,151,.7),0 0 22px rgba(255,46,151,.35)}
+.sub{color:var(--cyan);font-size:13px;letter-spacing:3px;text-transform:uppercase;margin-top:4px;text-shadow:0 0 6px rgba(0,240,255,.4)}
+.sub b{color:var(--amber)}
+
+/* Tabs */
+nav.tabs{position:sticky;top:0;z-index:50;display:flex;gap:6px;background:linear-gradient(var(--bg),rgba(6,10,6,.92));backdrop-filter:blur(4px);padding:8px 0;margin-bottom:14px;border-bottom:1px solid var(--line)}
+nav.tabs button{flex:1;appearance:none;cursor:pointer;background:var(--panel);color:var(--muted);border:1px solid var(--line);border-radius:7px;padding:11px 6px;font-family:inherit;font-size:13px;letter-spacing:1px;text-transform:uppercase;transition:.15s}
+nav.tabs button.active{color:var(--bg);background:var(--green);border-color:var(--green);box-shadow:var(--glow);font-weight:bold}
+nav.tabs button:active{transform:translateY(1px)}
+
+.view{display:none;animation:fade .25s ease}
+.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* Accordion */
+.acc{border:1px solid var(--line);border-radius:9px;margin:10px 0;overflow:hidden;background:var(--panel)}
+.acc>summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:10px;font-size:16px;color:var(--green);text-shadow:var(--glow)}
+.acc>summary::-webkit-details-marker{display:none}
+.acc>summary .chev{margin-left:auto;transition:.2s;color:var(--cyan)}
+.acc[open]>summary .chev{transform:rotate(90deg)}
+.acc>summary .tag{font-size:11px;color:var(--bg);background:var(--green-dim);padding:2px 7px;border-radius:5px}
+.acc .body{padding:4px 16px 16px;border-top:1px solid var(--line);color:var(--text)}
+.acc .body p{margin:12px 0}
+.acc .body b{color:var(--cyan)}
+.acc .body .warn{color:var(--amber)}
+.acc .body .muted{color:var(--muted);font-size:14px}
+hr.sep{border:0;border-top:1px dashed var(--line);margin:16px 0}
+
+/* Code / payload */
+.code{display:block;background:#02150a;border:1px solid var(--green-deep);border-left:3px solid var(--green);border-radius:6px;padding:11px 12px;margin:10px 0;color:var(--green);font-size:15px;position:relative;word-break:break-all;cursor:pointer;transition:.12s}
+.code:hover{background:#032c12}
+.code:active{transform:scale(.995)}
+.code .cp{position:absolute;top:6px;right:8px;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+.code.copied{border-color:var(--cyan);color:var(--cyan)}
+.code.copied .cp{color:var(--cyan)}
+.sql{color:var(--muted);font-size:13.5px;display:block;white-space:pre-wrap;margin:8px 0;padding-left:10px;border-left:2px solid var(--line)}
+.sql .hl{color:var(--magenta)}
+
+/* steps */
+ol.ladder{counter-reset:s;list-style:none;padding:0;margin:8px 0}
+ol.ladder li{counter-increment:s;position:relative;padding:10px 10px 10px 42px;border:1px solid var(--line);border-radius:7px;margin:8px 0;background:#081108}
+ol.ladder li::before{content:counter(s);position:absolute;left:10px;top:10px;width:22px;height:22px;border-radius:50%;background:var(--green);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:bold;box-shadow:var(--glow)}
+ol.ladder li b{color:var(--cyan)}
+
+/* Flashcards */
+.fc-bar{display:flex;align-items:center;gap:10px;margin:4px 0 14px;color:var(--muted);font-size:13px}
+.fc-bar .count{margin-left:auto;color:var(--cyan)}
+.fc-bar button{background:var(--panel);color:var(--green);border:1px solid var(--line);border-radius:6px;padding:8px 12px;font-family:inherit;cursor:pointer}
+.card{perspective:1200px;margin:0 auto;max-width:560px}
+.card .inner{position:relative;min-height:230px;transition:transform .5s;transform-style:preserve-3d;cursor:pointer}
+.card.flip .inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;border:1px solid var(--line);border-radius:12px;padding:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:var(--panel)}
+.face .lbl{position:absolute;top:12px;left:14px;font-size:11px;letter-spacing:2px;text-transform:uppercase}
+.front{box-shadow:inset 0 0 40px rgba(0,255,65,.05)}
+.front .lbl{color:var(--cyan)}
+.front .q{font-size:20px;color:var(--green);text-shadow:var(--glow)}
+.back{transform:rotateY(180deg);border-color:var(--magenta);box-shadow:inset 0 0 40px rgba(255,46,151,.06)}
+.back .lbl{color:var(--magenta)}
+.back .a{font-size:17px;color:var(--text)}
+.back .a code{color:var(--green);background:#02150a;padding:1px 6px;border-radius:4px}
+.tip{text-align:center;color:var(--muted);font-size:12.5px;margin-top:12px}
+.fc-nav{display:flex;gap:10px;margin-top:16px}
+.fc-nav button{flex:1;background:var(--panel);color:var(--green);border:1px solid var(--line);border-radius:8px;padding:14px;font-family:inherit;font-size:15px;cursor:pointer;letter-spacing:1px}
+.fc-nav button:active{transform:translateY(1px);background:var(--green-deep)}
+
+/* Missions */
+.mission{border:1px solid var(--line);border-radius:9px;padding:14px 16px;margin:10px 0;background:var(--panel);display:flex;gap:12px;align-items:flex-start}
+.mission .st{font-size:22px;line-height:1}
+.mission.done{border-color:var(--green-dim)}
+.mission.done .nm{color:var(--green);text-shadow:var(--glow)}
+.mission.now{border-color:var(--amber);box-shadow:inset 0 0 30px rgba(255,204,51,.06)}
+.mission.now .nm{color:var(--amber)}
+.mission.todo{opacity:.7}
+.mission .nm{font-size:16px}
+.mission .ds{color:var(--muted);font-size:13.5px;margin-top:3px}
+.mission .ds code{color:var(--green)}
+
+footer{text-align:center;color:var(--muted);font-size:12px;margin-top:30px;letter-spacing:1px}
+footer .pl{color:var(--magenta)}
+a{color:var(--cyan)}
+::selection{background:var(--green);color:var(--bg)}
+</style>
+</head>
+<body>
+
+<div id="boot" onclick="skipBoot()">
+  <div class="term"><span id="bootlog"></span><span class="cursor">&nbsp;</span></div>
+  <div class="skip">[ toque pra pular ]</div>
+</div>
+
+<div class="wrap hidden" id="app">
+  <header>
+    <h1 class="logo">HACK THE <span class="pl">PLANET</span></h1>
+    <div class="sub">cola de <b>SQLi</b> · bug bounty · zero cool approved</div>
+  </header>
+
+  <nav class="tabs">
+    <button class="active" data-view="cola" onclick="showView('cola',this)">Cola</button>
+    <button data-view="flash" onclick="showView('flash',this)">Flashcards</button>
+    <button data-view="miss" onclick="showView('miss',this)">Missões</button>
+  </nav>
+
+  <!-- ============ COLA ============ -->
+  <section class="view active" id="cola">
+
+    <details class="acc" open>
+      <summary>SQLi em 10 segundos <span class="tag">base</span><span class="chev">▶</span></summary>
+      <div class="body">
+        <p>O app pega o que você digita e <b>cola dentro de uma query SQL</b>. Se ele não separa "dado" de "comando", seu texto vira <b>código que o banco executa</b>.</p>
+        <span class="sql">SELECT * FROM products
+WHERE category = '<span class="hl">SEU_INPUT</span>' AND released = 1</span>
+        <p class="muted">A aspa que fecha a string é tudo. Se você conseguir sair dela, você escreve SQL.</p>
+      </div>
+    </details>
+
+    <details class="acc">
+      <summary>A escada (sempre nessa ordem) <span class="tag">método</span><span class="chev">▶</span></summary>
+      <div class="body">
+        <ol class="ladder">
+          <li><b>Detectar</b> — manda uma aspa <code>'</code>. Quebrou (500)? Tem injeção.</li>
+          <li><b>Confirmar</b> — entende a query e monta a lógica (<code>OR 1=1</code>).</li>
+          <li><b>Explorar</b> — comenta o resto com <code>--</code> e extrai/burla.</li>
+          <li><b>Documentar</b> — request, resposta, impacto, remediação.</li>
+        </ol>
+        <p class="muted">Regra de ouro: o <b>menor payload que prova</b> primeiro. Depois escala.</p>
+      </div>
+    </details>
+
+    <details class="acc">
+      <summary>Payloads <span class="tag">toque p/ copiar</span><span class="chev">▶</span></summary>
+      <div class="body">
+        <p><b>1. Detectar</b> — uma aspa. Resposta 500 = ouro.</p>
+        <code class="code">'<span class="cp">copiar</span></code>
+
+        <p><b>2. Retornar tudo</b> — condição sempre verdadeira + comentar o resto.</p>
+        <code class="code">' OR 1=1--<span class="cp">copiar</span></code>
+
+        <p><b>3. Na URL</b> (espaço vira <code>+</code>, e o <code>--</code> ganha espaço depois):</p>
+        <code class="code">'+OR+1=1--+-<span class="cp">copiar</span></code>
+
+        <hr class="sep">
+        <p><b>Login bypass</b> — entrar como um usuário sem a senha (comenta a checagem):</p>
+        <code class="code">USUARIO'--<span class="cp">copiar</span></code>
+        <p class="muted">Troca <code>USUARIO</code> pelo alvo (ex: o admin). A senha pode ser qualquer coisa — ela é comentada.</p>
+      </div>
+    </details>
+
+    <details class="acc">
+      <summary>Gotchas que derrubam todo mundo <span class="tag">!</span><span class="chev">▶</span></summary>
+      <div class="body">
+        <p class="warn">⚠ <b>Espaço na URL</b> quebra a request. Use <code>+</code> ou <code>%20</code>.</p>
+        <p class="warn">⚠ <b>Comentário <code>--</code> em MySQL precisa de espaço depois.</b> Como o app cola uma aspa logo em seguida (<code>--'</code>), o comentário não "pega". Solução: <code>-- -</code> (na URL: <code>--+-</code>).</p>
+        <p class="warn">⚠ <b>A aspa também é codificada:</b> o navegador manda <code>'</code> como <code>%27</code>. Mesmo payload.</p>
+        <p class="warn">⚠ <b>500 ≠ 400 ≠ 403.</b> 500 é o banco engasgando (bom sinal). 400 "Protocol error" / 403 é <b>transporte/infra</b>, não o teu payload.</p>
+      </div>
+    </details>
+
+    <details class="acc">
+      <summary>Fluxo no Caido <span class="tag">ferramenta</span><span class="chev">▶</span></summary>
+      <div class="body">
+        <p><b>1.</b> Abre o Caido, seleciona o projeto. Proxy escuta em <code>127.0.0.1:8083</code>.</p>
+        <p><b>2.</b> Workspace → <b>Browser Launcher</b> → Launch (abre o Chrome roteado pelo proxy).</p>
+        <p><b>3.</b> Navega no alvo → tudo cai em <b>Proxy → HTTP History</b>.</p>
+        <p><b>4.</b> Acha a request → botão direito → <b>Send to Replay</b> → edita e reenvia.</p>
+        <hr class="sep">
+        <p class="warn">Se o Replay cuspir "Protocol error" em tudo (HTTP/2 enroscado): dispara pelo <b>navegador</b> — continua passando pelo proxy.</p>
+        <p class="muted"><b>Debug:</b> travou e não sabe por quê? Manda uma request <b>limpa</b> pra isolar transporte × payload.</p>
+      </div>
+    </details>
+
+  </section>
+
+  <!-- ============ FLASHCARDS ============ -->
+  <section class="view" id="flash">
+    <div class="fc-bar">
+      <button onclick="shuffleCards()">⤮ embaralhar</button>
+      <span class="count"><span id="fcPos">1</span>/<span id="fcTotal">0</span></span>
+    </div>
+    <div class="card" id="card" onclick="flipCard()">
+      <div class="inner">
+        <div class="face front"><div class="lbl">pergunta</div><div class="q" id="fcQ"></div></div>
+        <div class="face back"><div class="lbl">resposta</div><div class="a" id="fcA"></div></div>
+      </div>
+    </div>
+    <div class="tip">toque no card pra virar</div>
+    <div class="fc-nav">
+      <button onclick="prevCard()">◀ anterior</button>
+      <button onclick="nextCard()">próximo ▶</button>
+    </div>
+  </section>
+
+  <!-- ============ MISSÕES ============ -->
+  <section class="view" id="miss">
+    <div class="mission done">
+      <div class="st">✅</div>
+      <div><div class="nm">Lab 1 — Retrieve hidden data</div>
+      <div class="ds">SQLi no <code>category=</code>. Exploit: <code>'+OR+1=1--+-</code>. WSTG-INPV-05.</div></div>
+    </div>
+    <div class="mission now">
+      <div class="st">▶</div>
+      <div><div class="nm">Lab 2 — Login bypass</div>
+      <div class="ds">Entrar como <code>administrator</code> sem a senha. Comentar a checagem no campo de usuário. <b>Em andamento.</b></div></div>
+    </div>
+    <div class="mission todo">
+      <div class="st">·</div>
+      <div><div class="nm">Lab 3 — UNION-based</div>
+      <div class="ds">Extrair dados de outras tabelas com <code>UNION SELECT</code>. A fazer.</div></div>
+    </div>
+    <div class="mission todo">
+      <div class="st">·</div>
+      <div><div class="nm">Lab 4 — Blind / time-based</div>
+      <div class="ds">Sem resposta visível: inferir por verdadeiro/falso ou <code>SLEEP()</code>. A fazer.</div></div>
+    </div>
+  </section>
+
+  <footer>&gt; MESS WITH THE BEST, DIE LIKE THE REST <span class="pl">_</span><br>cola viva — atualiza a cada lab</footer>
+</div>
+
+<script>
+/* ---------- Boot sequence ---------- */
+var bootLines=[
+ "> establishing uplink ........... OK",
+ "> bypassing the gibson ......... OK",
+ "> loading SQLi payloads ........ OK",
+ "> access granted. welcome back.",
+ ""
+];
+var bl=0, bc=0, bootEl=document.getElementById('bootlog'), booted=false;
+function typeBoot(){
+  if(booted) return;
+  if(bl>=bootLines.length){ endBoot(); return; }
+  var line=bootLines[bl];
+  if(bc<line.length){ bootEl.textContent+=line[bc++]; setTimeout(typeBoot,16); }
+  else{ bootEl.textContent+="\n"; bl++; bc=0; setTimeout(typeBoot,180); }
+}
+function endBoot(){
+  if(booted) return; booted=true;
+  document.getElementById('boot').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+}
+function skipBoot(){ endBoot(); }
+setTimeout(typeBoot,300);
+setTimeout(function(){ if(!booted) endBoot(); },6000); // safety
+
+/* ---------- Tabs ---------- */
+function showView(id,btn){
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active')});
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('nav.tabs button').forEach(function(b){b.classList.remove('active')});
+  btn.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ---------- Copy payloads ---------- */
+document.addEventListener('click',function(e){
+  var c=e.target.closest('.code'); if(!c) return;
+  var txt=c.childNodes[0].textContent;
+  var done=function(){ c.classList.add('copied'); var cp=c.querySelector('.cp'); var old=cp.textContent; cp.textContent='copiado ✓';
+    setTimeout(function(){c.classList.remove('copied');cp.textContent=old;},1200); };
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done).catch(fallback); }
+  else fallback();
+  function fallback(){ try{ var t=document.createElement('textarea');t.value=txt;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);done(); }catch(_){} }
+});
+
+/* ---------- Flashcards ---------- */
+var cards=[
+ {q:"Menor payload pra DETECTAR SQLi?", a:"Uma aspa: <code>'</code>. Se voltar 500, ela virou código SQL."},
+ {q:"Por que uma aspa quebra a query?", a:"Ela fecha a string SQL antes da hora → sintaxe inválida → erro."},
+ {q:"Payload pra retornar TODAS as linhas?", a:"<code>' OR 1=1--</code>"},
+ {q:"Por que <code>OR 1=1</code> funciona?", a:"É uma condição sempre verdadeira → toda linha passa no filtro."},
+ {q:"O que o <code>--</code> faz?", a:"Comenta o resto da query (ex: o <code>AND released=1</code> ou a checagem de senha)."},
+ {q:"Espaço na URL vira o quê?", a:"<code>+</code> ou <code>%20</code>. Senão a linha da request HTTP quebra."},
+ {q:"A pegadinha do <code>--</code> em MySQL?", a:"Precisa de espaço depois. Use <code>-- -</code> (na URL: <code>--+-</code>)."},
+ {q:"Como logar como admin SEM a senha?", a:"No usuário: <code>administrator'--</code> → comenta a verificação de senha."},
+ {q:"Replay deu 'Protocol error' em tudo. É o payload?", a:"Não — é transporte (HTTP/2 enroscado). Dispara pelo navegador roteado no proxy."},
+ {q:"Travou e não sabe a causa. Primeira coisa?", a:"Isolar a variável: manda uma request limpa e vê se o problema é transporte ou payload."},
+ {q:"500 vs 400/403 — o que cada um diz?", a:"500 = o banco engasgou (bom, há injeção). 400/403 = infra/transporte, não o teu payload."}
+];
+var fi=0, order=cards.map(function(_,i){return i});
+document.getElementById('fcTotal').textContent=cards.length;
+function renderCard(){
+  var c=cards[order[fi]];
+  var card=document.getElementById('card'); card.classList.remove('flip');
+  setTimeout(function(){
+    document.getElementById('fcQ').innerHTML=c.q;
+    document.getElementById('fcA').innerHTML=c.a;
+  }, card.classList.contains('flip')?260:0);
+  document.getElementById('fcQ').innerHTML=c.q;
+  document.getElementById('fcA').innerHTML=c.a;
+  document.getElementById('fcPos').textContent=fi+1;
+}
+function flipCard(){ document.getElementById('card').classList.toggle('flip'); }
+function nextCard(){ fi=(fi+1)%cards.length; renderCard(); }
+function prevCard(){ fi=(fi-1+cards.length)%cards.length; renderCard(); }
+function shuffleCards(){ for(var i=order.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=order[i];order[i]=order[j];order[j]=t;} fi=0; renderCard(); }
+renderCard();
+</script>
+</body>
+</html>
