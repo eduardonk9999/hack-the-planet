@@ -251,15 +251,15 @@ WHERE category = '<span class="hl">SEU_INPUT</span>' AND released = 1</span>
       <div><div class="nm">Lab 1 — Retrieve hidden data</div>
       <div class="ds">SQLi no <code>category=</code>. Exploit: <code>'+OR+1=1--+-</code>. WSTG-INPV-05.</div></div>
     </div>
+    <div class="mission done">
+      <div class="st">✅</div>
+      <div><div class="nm">Lab 2 — Login bypass</div>
+      <div class="ds">Logar como <code>administrator</code> sem senha. No username: <code>administrator'--</code>. Injeção em POST body; sucesso = 302 + <code>Location: /my-account</code>.</div></div>
+    </div>
     <div class="mission now">
       <div class="st">▶</div>
-      <div><div class="nm">Lab 2 — Login bypass</div>
-      <div class="ds">Entrar como <code>administrator</code> sem a senha. Comentar a checagem no campo de usuário. <b>Em andamento.</b></div></div>
-    </div>
-    <div class="mission todo">
-      <div class="st">·</div>
       <div><div class="nm">Lab 3 — UNION-based</div>
-      <div class="ds">Extrair dados de outras tabelas com <code>UNION SELECT</code>. A fazer.</div></div>
+      <div class="ds">Extrair dados de outras tabelas com <code>UNION SELECT</code>. <b>Próximo.</b></div></div>
     </div>
     <div class="mission todo">
       <div class="st">·</div>
@@ -329,7 +329,10 @@ var cards=[
  {q:"Como logar como admin SEM a senha?", a:"No usuário: <code>administrator'--</code> → comenta a verificação de senha."},
  {q:"Replay deu 'Protocol error' em tudo. É o payload?", a:"Não — é transporte (HTTP/2 enroscado). Dispara pelo navegador roteado no proxy."},
  {q:"Travou e não sabe a causa. Primeira coisa?", a:"Isolar a variável: manda uma request limpa e vê se o problema é transporte ou payload."},
- {q:"500 vs 400/403 — o que cada um diz?", a:"500 = o banco engasgou (bom, há injeção). 400/403 = infra/transporte, não o teu payload."}
+ {q:"500 vs 400/403 — o que cada um diz?", a:"500 = o banco engasgou (bom, há injeção). 400/403 = infra/transporte, não o teu payload."},
+ {q:"Login deu certo — qual status o servidor devolve?", a:"<code>302</code> (redirect, ex: <code>Location: /my-account</code>). Falha devolve 200 na mesma página."},
+ {q:"Editou o corpo de um POST. O que NÃO pode esquecer?", a:"Atualizar o <code>Content-Length</code>. Se ficar curto, o corpo é cortado → 'Missing parameter'."},
+ {q:"O que é o CSRF token no formulário de login?", a:"Campo escondido anti-forgery que carrega junto com a página. Submeta pela tela pra ele ir casado com a sessão."}
 ];
 var fi=0, order=cards.map(function(_,i){return i});
 document.getElementById('fcTotal').textContent=cards.length;
