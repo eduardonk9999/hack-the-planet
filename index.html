@@ -256,14 +256,19 @@ WHERE category = '<span class="hl">SEU_INPUT</span>' AND released = 1</span>
       <div><div class="nm">Lab 2 — Login bypass</div>
       <div class="ds">Logar como <code>administrator</code> sem senha. No username: <code>administrator'--</code>. Injeção em POST body; sucesso = 302 + <code>Location: /my-account</code>.</div></div>
     </div>
+    <div class="mission done">
+      <div class="st">✅</div>
+      <div><div class="nm">Lab 3 — UNION: contar colunas</div>
+      <div class="ds"><code>ORDER BY</code> até quebrar (N-1 = colunas) e <code>UNION SELECT NULL,NULL,NULL--</code>. Eram 3 colunas.</div></div>
+    </div>
     <div class="mission now">
       <div class="st">▶</div>
-      <div><div class="nm">Lab 3 — UNION-based</div>
-      <div class="ds">Extrair dados de outras tabelas com <code>UNION SELECT</code>. <b>Próximo.</b></div></div>
+      <div><div class="nm">Lab 4 — UNION: extrair dados</div>
+      <div class="ds">Achar a coluna de texto e puxar dados reais (users/senhas) com <code>UNION SELECT</code>. <b>Próximo.</b></div></div>
     </div>
     <div class="mission todo">
       <div class="st">·</div>
-      <div><div class="nm">Lab 4 — Blind / time-based</div>
+      <div><div class="nm">Lab 5 — Blind / time-based</div>
       <div class="ds">Sem resposta visível: inferir por verdadeiro/falso ou <code>SLEEP()</code>. A fazer.</div></div>
     </div>
   </section>
@@ -332,7 +337,11 @@ var cards=[
  {q:"500 vs 400/403 — o que cada um diz?", a:"500 = o banco engasgou (bom, há injeção). 400/403 = infra/transporte, não o teu payload."},
  {q:"Login deu certo — qual status o servidor devolve?", a:"<code>302</code> (redirect, ex: <code>Location: /my-account</code>). Falha devolve 200 na mesma página."},
  {q:"Editou o corpo de um POST. O que NÃO pode esquecer?", a:"Atualizar o <code>Content-Length</code>. Se ficar curto, o corpo é cortado → 'Missing parameter'."},
- {q:"O que é o CSRF token no formulário de login?", a:"Campo escondido anti-forgery que carrega junto com a página. Submeta pela tela pra ele ir casado com a sessão."}
+ {q:"O que é o CSRF token no formulário de login?", a:"Campo escondido anti-forgery que carrega junto com a página. Submeta pela tela pra ele ir casado com a sessão."},
+ {q:"O que o <code>UNION SELECT</code> faz?", a:"Cola o resultado de uma 2ª query na resposta → puxa dados de outras tabelas (ex: users)."},
+ {q:"As 2 regras do UNION?", a:"(1) mesmo número de colunas das duas queries; (2) tipos de dados compatíveis."},
+ {q:"Como contar as colunas da query (método ORDER BY)?", a:"<code>' ORDER BY 1--</code>, 2, 3... até dar erro. Quebrou no N → <b>N-1 colunas</b>."},
+ {q:"Por que usar <code>NULL</code> no UNION SELECT?", a:"NULL encaixa em qualquer tipo de coluna — testa a estrutura sem tomar erro de tipo."}
 ];
 var fi=0, order=cards.map(function(_,i){return i});
 document.getElementById('fcTotal').textContent=cards.length;
