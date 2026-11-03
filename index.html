@@ -283,14 +283,19 @@ WHERE category = '<span class="hl">SEU_INPUT</span>' AND released = 1</span>
       <div><div class="nm">Lab 3 — UNION: contar colunas</div>
       <div class="ds"><code>ORDER BY</code> até quebrar (N-1 = colunas) e <code>UNION SELECT NULL,NULL,NULL--</code>. Eram 3 colunas.</div></div>
     </div>
+    <div class="mission done">
+      <div class="st">✅</div>
+      <div><div class="nm">Lab 4 — UNION: achar coluna de texto</div>
+      <div class="ds"><code>' UNION SELECT NULL,'xyz',NULL--</code> — a que exibe o texto é a de tipo string (era a col 2).</div></div>
+    </div>
     <div class="mission now">
       <div class="st">▶</div>
-      <div><div class="nm">Lab 4 — UNION: extrair dados</div>
-      <div class="ds">Achar a coluna de texto e puxar dados reais (users/senhas) com <code>UNION SELECT</code>. <b>Próximo.</b></div></div>
+      <div><div class="nm">Lab 5 — UNION: extrair credenciais</div>
+      <div class="ds">Puxar users/senhas reais: <code>UNION SELECT username,password,NULL FROM users--</code>. <b>Próximo.</b></div></div>
     </div>
     <div class="mission todo">
       <div class="st">·</div>
-      <div><div class="nm">Lab 5 — Blind / time-based</div>
+      <div><div class="nm">Lab 6 — Blind / time-based</div>
       <div class="ds">Sem resposta visível: inferir por verdadeiro/falso ou <code>SLEEP()</code>. A fazer.</div></div>
     </div>
   </section>
