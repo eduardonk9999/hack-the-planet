@@ -288,15 +288,15 @@ WHERE category = '<span class="hl">SEU_INPUT</span>' AND released = 1</span>
       <div><div class="nm">Lab 4 — UNION: achar coluna de texto</div>
       <div class="ds"><code>' UNION SELECT NULL,'xyz',NULL--</code> — a que exibe o texto é a de tipo string (era a col 2).</div></div>
     </div>
+    <div class="mission done">
+      <div class="st">✅</div>
+      <div><div class="nm">Lab 5 — UNION: extrair credenciais</div>
+      <div class="ds">Despejei a tabela <code>users</code>: <code>' UNION SELECT username,password FROM users-- -</code> e loguei como <code>administrator</code>. Era <b>2 colunas</b> (reconferi — não confia em lab anterior!). 100% no Caido Replay.</div></div>
+    </div>
     <div class="mission now">
       <div class="st">▶</div>
-      <div><div class="nm">Lab 5 — UNION: extrair credenciais</div>
-      <div class="ds">Puxar users/senhas reais: <code>UNION SELECT username,password,NULL FROM users--</code>. ⚠ Cada lab é independente: <b>reconte as colunas</b> antes (o <code>NULL</code> aqui assume 3). <b>Próximo.</b></div></div>
-    </div>
-    <div class="mission todo">
-      <div class="st">·</div>
       <div><div class="nm">Lab 6 — Blind / time-based</div>
-      <div class="ds">Sem resposta visível: inferir por verdadeiro/falso ou <code>SLEEP()</code>. A fazer.</div></div>
+      <div class="ds">Sem resposta visível: inferir por verdadeiro/falso ou <code>SLEEP()</code>. <b>Próximo.</b></div></div>
     </div>
   </section>
 
@@ -368,7 +368,10 @@ var cards=[
  {q:"O que o <code>UNION SELECT</code> faz?", a:"Cola o resultado de uma 2ª query na resposta → puxa dados de outras tabelas (ex: users)."},
  {q:"As 2 regras do UNION?", a:"(1) mesmo número de colunas das duas queries; (2) tipos de dados compatíveis."},
  {q:"Como contar as colunas da query (método ORDER BY)?", a:"<code>' ORDER BY 1--</code>, 2, 3... até dar erro. Quebrou no N → <b>N-1 colunas</b>."},
- {q:"Por que usar <code>NULL</code> no UNION SELECT?", a:"NULL encaixa em qualquer tipo de coluna — testa a estrutura sem tomar erro de tipo."}
+ {q:"Por que usar <code>NULL</code> no UNION SELECT?", a:"NULL encaixa em qualquer tipo de coluna — testa a estrutura sem tomar erro de tipo."},
+ {q:"Payload pra roubar credenciais de outra tabela?", a:"<code>' UNION SELECT username,password FROM users-- -</code> → despeja a tabela <code>users</code> na resposta."},
+ {q:"ORDER BY diz 3 colunas, mas <code>UNION SELECT NULL,NULL,NULL</code> dá 500. Qual é o certo?", a:"O UNION-NULL manda: o nº de NULLs que <b>carrega</b> é a verdade (era 2). Não confie na leitura do ORDER BY nem em lab anterior."},
+ {q:"Replay deu 400 / 'Protocol error' DEPOIS de você editar a request. 1ª suspeita?", a:"Leia o request CRU — provável <code>HTTP/1.1</code> duplicado no fim da linha. Request line malformada, não é o HTTP/2."}
 ];
 var fi=0, order=cards.map(function(_,i){return i});
 document.getElementById('fcTotal').textContent=cards.length;
